@@ -18,11 +18,16 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Generate ENV file
+        uses: SpicyPizza/create-envfile@v1.3
+        with:
+          envkey_INFURA_ID: ${{ secrets.INFURA_ID }}
       - name: Build and push Latest
         if: github.event.release.prerelease == false
         id: docker_build_latest
         uses: docker/build-push-action@v3
         with:
+          context: .
           push: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -30,13 +35,14 @@ jobs:
           tags: |
             ghcr.io/devfolioco/siwe-oidc:${{ github.event.release.tag_name }}
             ghcr.io/devfolioco/siwe-oidc:latest
-          secrets: |
-            "INFURA_ID=${{ secrets.INFURA_ID }}"
+          secret-files: |
+            "ENV=./.env"
       - name: Build and push Pre-Release
         if: github.event.release.prerelease == true
         id: docker_build_prerelease
         uses: docker/build-push-action@v3
         with:
+          context: .
           push: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -44,5 +50,5 @@ jobs:
           platforms: linux/amd64
           tags: |
             ghcr.io/devfolioco/siwe-oidc:${{ github.event.release.tag_name }}
-          secrets: |
-            "INFURA_ID=${{ secrets.INFURA_ID }}"
+          secret-files: |
+            "ENV=./.env"

@@ -18,12 +18,8 @@ FROM node:16-alpine as node_builder
 # Reference https://github.com/mhart/alpine-node/issues/27#issuecomment-880663905
 RUN apk add --no-cache --virtual .build-deps alpine-sdk python3
 
-RUN --mount=type=secret,id=INFURA_ID \
-    export INFURA_ID=$(cat /run/secrets/INFURA_ID)
-
-ENV FORTMATIC_KEY=""
-ENV INFURA_ID=""
-ENV PORTIS_ID=""
+RUN --mount=type=secret,id=ENV,dst=/ENV \
+  NODE_OPTIONS="--max-old-space-size=8192" cat /ENV > .env
 
 
 ADD --chown=node:node ./static /siwe-oidc/static
@@ -36,6 +32,7 @@ FROM chef as builder
 COPY --from=dep_cacher /siwe-oidc/target/ ./target/
 COPY --from=dep_cacher $CARGO_HOME $CARGO_HOME
 COPY --from=dep_planner /siwe-oidc/ ./
+COPY --from=dep_planner /siwe-oidc/.env .env
 RUN cargo build --release
 
 FROM alpine
