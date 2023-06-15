@@ -32,7 +32,6 @@ FROM chef as builder
 COPY --from=dep_cacher /siwe-oidc/target/ ./target/
 COPY --from=dep_cacher $CARGO_HOME $CARGO_HOME
 COPY --from=dep_planner /siwe-oidc/ ./
-COPY --from=dep_planner /siwe-oidc/.env .env
 RUN cargo build --release
 
 FROM alpine
