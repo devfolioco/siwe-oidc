@@ -22,6 +22,9 @@ ENV FORTMATIC_KEY=""
 ENV INFURA_ID=""
 ENV PORTIS_ID=""
 
+RUN --mount=type=secret,id=INFURA_ID \
+    export INFURA_ID=$(cat /run/secrets/INFURA_ID)
+
 
 ADD --chown=node:node ./static /siwe-oidc/static
 ADD --chown=node:node ./js/ui /siwe-oidc/js/ui
