@@ -18,12 +18,11 @@ FROM node:16-alpine as node_builder
 # Reference https://github.com/mhart/alpine-node/issues/27#issuecomment-880663905
 RUN apk add --no-cache --virtual .build-deps alpine-sdk python3
 
-ENV FORTMATIC_KEY=""
-ENV INFURA_ID=""
-ENV PORTIS_ID=""
-
 RUN --mount=type=secret,id=INFURA_ID \
     export INFURA_ID=$(cat /run/secrets/INFURA_ID)
+
+ENV FORTMATIC_KEY=""
+ENV PORTIS_ID=""
 
 
 ADD --chown=node:node ./static /siwe-oidc/static
