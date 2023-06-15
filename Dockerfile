@@ -22,6 +22,7 @@ RUN --mount=type=secret,id=INFURA_ID \
     export INFURA_ID=$(cat /run/secrets/INFURA_ID)
 
 ENV FORTMATIC_KEY=""
+ENV INFURA_ID=""
 ENV PORTIS_ID=""
 
 
