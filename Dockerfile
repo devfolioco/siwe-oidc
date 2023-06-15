@@ -21,6 +21,7 @@ RUN apk add --no-cache --virtual .build-deps alpine-sdk python3
 RUN --mount=type=secret,id=ENV,dst=/ENV \
   NODE_OPTIONS="--max-old-space-size=8192" cat /ENV > .env
 
+ENV INFURA_ID=""
 
 ADD --chown=node:node ./static /siwe-oidc/static
 ADD --chown=node:node ./js/ui /siwe-oidc/js/ui
