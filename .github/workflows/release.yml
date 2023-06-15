@@ -27,7 +27,6 @@ jobs:
         id: docker_build_latest
         uses: docker/build-push-action@v3
         with:
-          context: .
           push: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -42,7 +41,6 @@ jobs:
         id: docker_build_prerelease
         uses: docker/build-push-action@v3
         with:
-          context: .
           push: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
