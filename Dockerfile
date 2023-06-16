@@ -18,10 +18,12 @@ FROM node:16-alpine as node_builder
 # Reference https://github.com/mhart/alpine-node/issues/27#issuecomment-880663905
 RUN apk add --no-cache --virtual .build-deps alpine-sdk python3
 
-RUN --mount=type=secret,id=ENV,dst=/ENV \
-  NODE_OPTIONS="--max-old-space-size=8192" cat /ENV > .env
+ARG INFURA_ID
 
-ENV INFURA_ID=""
+ENV FORTMATIC_KEY=""
+ENV INFURA_ID=${INFURA_ID}
+ENV PORTIS_ID=""
+
 
 ADD --chown=node:node ./static /siwe-oidc/static
 ADD --chown=node:node ./js/ui /siwe-oidc/js/ui
