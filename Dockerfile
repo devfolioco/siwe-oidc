@@ -21,12 +21,13 @@ RUN apk add --no-cache --virtual .build-deps alpine-sdk python3
 ARG INFURA_ID
 ARG WALLET_CONNECT_ID
 
-ENV VITE_INFURA_ID=${INFURA_ID}
-ENV VITE_WALLET_CONNECT_ID=${WALLET_CONNECT_ID}
+ENV INFURA_ID=${INFURA_ID}
+ENV WALLET_CONNECT_ID=${WALLET_CONNECT_ID}
 
+ADD --chown=node:node ./static /siwe-oidc/static
 ADD --chown=node:node ./js/ui /siwe-oidc/js/ui
 WORKDIR /siwe-oidc/js/ui
-RUN yarn install
+RUN yarn
 RUN yarn build
 
 FROM chef as builder
@@ -39,7 +40,7 @@ FROM alpine
 COPY --from=builder /siwe-oidc/target/x86_64-unknown-linux-musl/release/siwe-oidc /usr/local/bin/
 WORKDIR /siwe-oidc
 RUN mkdir -p ./static
-COPY --from=node_builder /siwe-oidc/js/ui/dist ./static/
+COPY --from=node_builder /siwe-oidc/static/ ./static/
 COPY --from=builder /siwe-oidc/siwe-oidc.toml ./
 ENV SIWEOIDC_ADDRESS="0.0.0.0"
 EXPOSE 8000
