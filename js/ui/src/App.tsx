@@ -1,3 +1,4 @@
+import React from "react";
 import { ConnectKitButton, ConnectKitProvider } from "connectkit";
 import { SiweMessage } from "siwe";
 import { useAccount } from "wagmi";

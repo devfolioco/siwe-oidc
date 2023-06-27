@@ -8,8 +8,8 @@ import "./index.css";
 const config = createConfig(
   getDefaultConfig({
     // Required API Keys
-    infuraId: import.meta.env.VITE_INFURA_ID,
-    walletConnectProjectId: import.meta.env.VITE_WALLET_CONNECT_ID,
+    infuraId: process.env.INFURA_ID,
+    walletConnectProjectId: process.env.WALLET_CONNECT_ID ?? '',
     chains: [mainnet],
 
     // Required
