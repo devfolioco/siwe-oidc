@@ -19,13 +19,11 @@ FROM node:16-alpine as node_builder
 RUN apk add --no-cache --virtual .build-deps alpine-sdk python3
 
 ARG INFURA_ID
+ARG WALLET_CONNECT_ID
 
-ENV FORTMATIC_KEY=""
-ENV INFURA_ID=${INFURA_ID}
-ENV PORTIS_ID=""
+ENV VITE_INFURA_ID=${INFURA_ID}
+ENV VITE_WALLET_CONNECT_ID=${WALLET_CONNECT_ID}
 
-
-ADD --chown=node:node ./static /siwe-oidc/static
 ADD --chown=node:node ./js/ui /siwe-oidc/js/ui
 WORKDIR /siwe-oidc/js/ui
 RUN npm install
@@ -41,7 +39,7 @@ FROM alpine
 COPY --from=builder /siwe-oidc/target/x86_64-unknown-linux-musl/release/siwe-oidc /usr/local/bin/
 WORKDIR /siwe-oidc
 RUN mkdir -p ./static
-COPY --from=node_builder /siwe-oidc/static/ ./static/
+COPY --from=node_builder /siwe-oidc/js/ui/dist ./static/
 COPY --from=builder /siwe-oidc/siwe-oidc.toml ./
 ENV SIWEOIDC_ADDRESS="0.0.0.0"
 EXPOSE 8000
