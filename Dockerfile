@@ -26,8 +26,8 @@ ENV VITE_WALLET_CONNECT_ID=${WALLET_CONNECT_ID}
 
 ADD --chown=node:node ./js/ui /siwe-oidc/js/ui
 WORKDIR /siwe-oidc/js/ui
-RUN npm install
-RUN npm run build
+RUN yarn install
+RUN yarn build
 
 FROM chef as builder
 COPY --from=dep_cacher /siwe-oidc/target/ ./target/

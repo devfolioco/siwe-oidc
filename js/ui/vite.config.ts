@@ -8,6 +8,9 @@ export default defineConfig({
   define: {
     "process.env": {},
   },
+  build: {
+    target: "es2020",
+  },
   optimizeDeps: {
     esbuildOptions: {
       // Node.js global to browser globalThis
@@ -18,6 +21,7 @@ export default defineConfig({
       plugins: [
         NodeGlobalsPolyfillPlugin({
           buffer: true,
+          process: true,
         }),
       ],
     },
