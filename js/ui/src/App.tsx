@@ -86,7 +86,7 @@ function App() {
           Sign in with Ethereum
         </h1>
         <p className="mt-1 text-base font-normal text-gray-7">
-          Continue below to sign to Devfolio. In the next step, we will ask you to provide your email address.
+          In the next step, we will ask you to provide your email address.
         </p>
 
         <div className="flex flex-col mt-6 w-full justify-center">

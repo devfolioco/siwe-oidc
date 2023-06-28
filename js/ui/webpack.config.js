@@ -32,9 +32,9 @@ module.exports = {
         runtimeChunk: 'single',
     },
     output: {
-        path: path.join(__dirname, './dist'),
+        path: path.join(__dirname, './dist/build'),
         filename: '[name].[chunkhash].js',
-        chunkFilename: '[name]..[chunkhash].[id].js'
+        chunkFilename: '[name].[chunkhash].[id].js'
     },
     module: {
         rules: [
@@ -85,8 +85,8 @@ module.exports = {
         new webpack.EnvironmentPlugin(prod ? ['INFURA_ID', 'WALLET_CONNECT_ID'] : []),
         new CopyWebpackPlugin({
             patterns: [
-                { from: 'favicon.png', to: 'favicon.png' },
-                { from: 'error.html', to: 'error.html' },
+                { from: 'favicon.png', to: path.join(__dirname, './dist/favicon.png') },
+                { from: 'error.html', to: path.join(__dirname, './dist/error.html') },
             ],
         }),
     ],
