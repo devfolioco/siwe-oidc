@@ -2,6 +2,7 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const path = require('path');
 const webpack = require('webpack');
 const HTMLWebpackPlugin = require('html-webpack-plugin');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 const mode = process.env.NODE_ENV || 'development';
 const prod = mode === 'production';
@@ -31,10 +32,9 @@ module.exports = {
         runtimeChunk: 'single',
     },
     output: {
-        path: path.join(__dirname, '../../static/build'),
-        publicPath: "/build/",
+        path: path.join(__dirname, './dist'),
         filename: '[name].[chunkhash].js',
-        chunkFilename: '[name].[id].js'
+        chunkFilename: '[name]..[chunkhash].[id].js'
     },
     module: {
         rules: [
@@ -71,6 +71,10 @@ module.exports = {
     },
     mode,
     plugins: [
+        new HTMLWebpackPlugin({
+            template: path.join(__dirname, 'index.html'),
+            filename: path.join(__dirname, './dist/index.html'),
+        }),
         new webpack.ProvidePlugin({
             Buffer: ["buffer", "Buffer"],
             process: path.resolve(path.join(__dirname, "node_modules/process/browser.js")),
@@ -79,13 +83,19 @@ module.exports = {
             filename: '[name].[contenthash].css'
         }),
         new webpack.EnvironmentPlugin(prod ? ['INFURA_ID', 'WALLET_CONNECT_ID'] : []),
-        new HTMLWebpackPlugin({
-            template: path.join(__dirname, 'index.html'),
-            filename: path.join(__dirname, '../../static/index.html'),
+        new CopyWebpackPlugin({
+            patterns: [
+                { from: 'favicon.png', to: 'favicon.png' },
+                { from: 'error.html', to: 'error.html' },
+            ],
         }),
     ],
     devtool: prod ? false : 'source-map',
     devServer: {
-        hot: true
+        hot: true,
+        open: true,
+        static: {
+            directory: path.join(__dirname, './dist'),
+        },
     }
 };
