@@ -7,12 +7,34 @@ import devfolioLogoFull from "./assets/devfolio-logo-full.svg";
 import signInWithEthereum from "./assets/sign-in-ethereum.svg";
 import ethereumLogo from "./assets/ethereum-logo.svg";
 
+
+type ACTION_TYPE = 'signin' | 'signup' | 'connect';
+
 const params = new URLSearchParams(window.location.search);
 const nonce = params.get("nonce") ?? "";
 const redirect = params.get("redirect_uri") ?? "";
 const state = params.get("state") ?? "";
 const oidc_nonce = params.get("oidc_nonce") ?? "";
 const client_id = params.get("client_id") ?? "";
+const action = params.get("action") as (ACTION_TYPE | undefined) ?? "signin";
+
+const TITLE: Record<ACTION_TYPE, string> = {
+  signin: "Sign in with Ethereum",
+  signup: "Sign up with Ethereum",
+  connect: "Link your Ethereum Wallet",
+};
+
+const DESCRIPTION: Record<ACTION_TYPE, string> = {
+  signin: "Continue below to sign in to Devfolio.",
+  signup: "In the next step, we will ask you to provide your email address.",
+  connect: "Continue below to connect your Ethereum Wallet to Devfolio.",
+};
+
+const SIGNING_MESSAGE: Record<ACTION_TYPE, string> = {
+  signin: `You are signing-in to Devfolio.`,
+  signup: `You are signing-up to Devfolio.`,
+  connect: `You are connecting your Ethereum Wallet to Devfolio.`,
+}
 
 function App() {
   const account = useAccount();
@@ -36,7 +58,7 @@ function App() {
           expirationTime: expirationTime.toISOString(),
           uri: window.location.origin,
           version: "1",
-          statement: `You are signing-in to ${window.location.host}.`,
+          statement: SIGNING_MESSAGE[action],
           nonce,
           resources: [redirect],
         }).prepareMessage();
@@ -83,10 +105,10 @@ function App() {
       />
       <div className="w-full md:w-[476px] bg-white md:rounded-2xl md:shadow-blue-1 pt-2 md:pt-8 p-8 mt-10">
         <h1 className=" text-2xl font-extrabold text-black">
-          Sign in with Ethereum
+          {TITLE[action]}
         </h1>
         <p className="mt-1 text-base font-normal text-gray-7">
-          In the next step, we will ask you to provide your email address.
+          {DESCRIPTION[action]}
         </p>
 
         <div className="flex flex-col mt-6 w-full justify-center">
