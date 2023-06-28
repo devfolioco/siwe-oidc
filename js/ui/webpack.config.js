@@ -1,6 +1,7 @@
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const path = require('path');
 const webpack = require('webpack');
+const HTMLWebpackPlugin = require('html-webpack-plugin');
 
 const mode = process.env.NODE_ENV || 'development';
 const prod = mode === 'production';
@@ -32,7 +33,7 @@ module.exports = {
     output: {
         path: path.join(__dirname, '../../static/build'),
         publicPath: "/build/",
-        filename: '[name].js',
+        filename: '[name].[chunkhash].js',
         chunkFilename: '[name].[id].js'
     },
     module: {
@@ -75,9 +76,13 @@ module.exports = {
             process: path.resolve(path.join(__dirname, "node_modules/process/browser.js")),
         }),
         new MiniCssExtractPlugin({
-            filename: '[name].css'
+            filename: '[name].[contenthash].css'
         }),
         new webpack.EnvironmentPlugin(prod ? ['INFURA_ID', 'WALLET_CONNECT_ID'] : []),
+        new HTMLWebpackPlugin({
+            template: path.join(__dirname, 'index.html'),
+            filename: path.join(__dirname, '../../static/index.html'),
+        }),
     ],
     devtool: prod ? false : 'source-map',
     devServer: {
