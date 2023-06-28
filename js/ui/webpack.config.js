@@ -32,7 +32,7 @@ module.exports = {
         runtimeChunk: 'single',
     },
     output: {
-        path: path.join(__dirname, './dist/build'),
+        path: prod ? path.join(__dirname, './dist/build') : path.join(__dirname, './dist'),
         filename: '[name].[chunkhash].js',
         chunkFilename: '[name].[chunkhash].[id].js'
     },
