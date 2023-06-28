@@ -17,55 +17,60 @@ const client_id = params.get("client_id") ?? "";
 function App() {
   const account = useAccount();
 
-  const handleSignInWithEthereum = async ({
-    address,
-  }: {
-    address?: string;
-  }) => {
-    console.log({ address });
-    try {
-      const expirationTime = new Date(
-        new Date().getTime() + 2 * 24 * 60 * 60 * 1000 // 48h
-      );
-      const signMessage = new SiweMessage({
-        domain: window.location.host,
-        address: address,
-        chainId: await account.connector?.getChainId(),
-        expirationTime: expirationTime.toISOString(),
-        uri: window.location.origin,
-        version: "1",
-        statement: `You are signing-in to ${window.location.host}.`,
-        nonce,
-        resources: [redirect],
-      }).prepareMessage();
+  React.useEffect(() => {
+    const handleSignInWithEthereum = async ({
+      address,
+    }: {
+      address?: string;
+    }) => {
+      try {
+        const expirationTime = new Date(
+          new Date().getTime() + 2 * 24 * 60 * 60 * 1000 // 48h
+        );
 
-      const walletClient = await account.connector?.getWalletClient();
+        const chainId = await account.connector?.getChainId();
+        const signMessage = new SiweMessage({
+          domain: window.location.host,
+          address: address,
+          chainId,
+          expirationTime: expirationTime.toISOString(),
+          uri: window.location.origin,
+          version: "1",
+          statement: `You are signing-in to ${window.location.host}.`,
+          nonce,
+          resources: [redirect],
+        }).prepareMessage();
+        const walletClient = await account.connector?.getWalletClient();
 
-      const signature = walletClient?.signMessage({
-        account: account.address,
-        message: signMessage,
-      });
+        const signature = await walletClient?.signMessage({
+          account: account.address,
+          message: signMessage,
+        });
 
-      const message = new SiweMessage(signMessage);
-      const session = {
-        message,
-        raw: signMessage,
-        signature,
-      };
-      Cookies.set("siwe", JSON.stringify(session), {
-        expires: expirationTime,
-      });
+        const message = new SiweMessage(signMessage);
+        const session = {
+          message,
+          raw: signMessage,
+          signature,
+        };
+        Cookies.set("siwe", JSON.stringify(session), {
+          expires: expirationTime,
+        });
 
-      window.location.replace(
-        `/sign_in?redirect_uri=${encodeURI(redirect)}&state=${encodeURI(
-          state
-        )}&client_id=${encodeURI(client_id)}${encodeURI(oidc_nonce)}`
-      );
-      return;
-    } catch (e) {
-      console.error(e);
+        window.location.replace(
+          `/sign_in?redirect_uri=${encodeURI(redirect)}&state=${encodeURI(
+            state
+          )}&client_id=${encodeURI(client_id)}${encodeURI(oidc_nonce)}`
+        );
+        return;
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    if (typeof account.address === "string") {
+      handleSignInWithEthereum({ address: account.address });
     }
-  };
+  }, [account]);
 
   return (
     <div className="bg-white md:bg-gray-bg h-full w-full flex flex-col items-center font-nunito justify-start">
@@ -103,7 +108,6 @@ function App() {
                 "--ck-modal-heading-font-weight": 800,
                 "--ck-secondary-button-font-weight": 600,
               }}
-              onConnect={handleSignInWithEthereum}
             >
               <ConnectKitButton.Custom>
                 {({ show }) => (
