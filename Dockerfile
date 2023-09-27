@@ -13,7 +13,7 @@ FROM chef as dep_cacher
 COPY --from=dep_planner /siwe-oidc/recipe.json recipe.json
 RUN cargo chef cook --release --recipe-path recipe.json
 
-FROM node:18-alpine as node_builder
+FROM node:18.17.1-alpine3.18 as node_builder
 
 # Reference https://github.com/mhart/alpine-node/issues/27#issuecomment-880663905
 RUN apk add --no-cache --virtual .build-deps alpine-sdk python3
