@@ -17,6 +17,7 @@ export default {
 				blue: {
 					0: '#F0F4FF',
 					1: '#D2E0FF',
+					2: '#B3CEFF',
 					3: '#8097F2',
 					4: '#3770FF',
 					'4B': '#2368FB',

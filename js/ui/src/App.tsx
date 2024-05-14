@@ -6,6 +6,7 @@ import Cookies from "js-cookie";
 import devfolioLogoFull from "./assets/devfolio-logo-full.svg";
 import signInWithEthereum from "./assets/sign-in-ethereum.svg";
 import stepCheck from './assets/step-check.svg';
+import loader from './assets/loader.svg';
 
 
 type ACTION_TYPE = 'signin' | 'signup' | 'connect';
@@ -90,6 +91,7 @@ function App() {
   const account = useAccount();
   const {disconnect} = useDisconnect();
 
+  const [isVerifyingAddress, setIsVerifyingAddress] = React.useState<boolean>(false);
   const [activeStepNumber, setActiveStepNumber] = React.useState<number>(1);
   const [redirectMaxTime, setRedirectMaxTime] = React.useState<Date | null>(null);
   const [redirectTime, setRedirectTime] = React.useState<number>(5);
@@ -105,13 +107,14 @@ function App() {
     const maxRedirectTime = new Date();
     maxRedirectTime.setSeconds(maxRedirectTime.getSeconds()+5);
     setRedirectMaxTime(maxRedirectTime);
+    setIsVerifyingAddress(false);
 
     setActiveStepNumber(3);
   }
 
   const handleSignInWithEthereum = async (e: React.MouseEvent) => {
     e.preventDefault();
-
+    setIsVerifyingAddress(true);
     const address = account?.address;
     try {
       const expirationTime = new Date(
@@ -159,6 +162,7 @@ function App() {
       
       return;
     } catch (e) {
+      setIsVerifyingAddress(false);
       console.error(e);
     }
   };
@@ -229,7 +233,17 @@ function App() {
                 <p onClick={handleChangeWallet} role="button" className="block md-max:hidden text-base underline text-gray-7">
                   Change wallet
                 </p>
-                <button onClick={handleSignInWithEthereum} className="flex w-full md:w-auto justify-center items-center px-6 py-2.5 bg-blue-4 border border-solid border-blue-4B shadow-blue-1 rounded-lg">
+                <button onClick={handleSignInWithEthereum} className={`flex w-full md:w-auto justify-center items-center px-6 py-2.5 border border-solid ${isVerifyingAddress ? 'bg-blue-2 border-blue-2':'bg-blue-4 border-blue-4B'} shadow-blue-1 rounded-lg gap-2`}>
+                  {
+                    isVerifyingAddress && 
+                    <img
+                      src={loader}
+                      alt="Step Check"
+                      height={16}
+                      width={16}
+                      className="max-h-4 max-w-4 animate-spin"
+                    />
+                  }
                   <p className="text-white text-bold text-base font-normal">Verify Address</p>
                 </button>
                 <p onClick={handleChangeWallet} role="button" className="block md:hidden text-base underline text-gray-7">
@@ -250,8 +264,18 @@ function App() {
                 }}
               >
                 <ConnectKitButton.Custom>
-                  {({ show }) => (
-                    <button onClick={show} className="flex w-full md:w-auto justify-center items-center px-6 py-2.5 bg-blue-4 border border-solid border-blue-4B shadow-blue-1 rounded-lg">
+                  {({ show, isConnecting }) => (
+                    <button onClick={show} className={`flex w-full md:w-auto justify-center items-center px-6 py-2.5 border border-solid ${isConnecting ? 'bg-blue-2 border-blue-2':'bg-blue-4 border-blue-4B'}  shadow-blue-1 rounded-lg gap-2`}>
+                      {
+                        isConnecting && 
+                        <img
+                          src={loader}
+                          alt="Step Check"
+                          height={16}
+                          width={16}
+                          className="max-h-4 max-w-4 animate-spin"
+                        />
+                      }
                       <p className="text-white text-bold text-base font-normal">Connect Wallet</p>
                     </button>
                   )}
