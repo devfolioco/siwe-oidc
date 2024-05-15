@@ -206,7 +206,7 @@ function App() {
         width={174}
         className="mt-10 h-[27px] w-[135px] md:h-[36px] md:w-[174px] md:mt-16"
       />
-      <div className="md:rounded-2xl md:w-[600px] bg-white md:shadow-blue-1  mt-10">
+      <div className="md:rounded-2xl md:w-[600px] bg-white md:shadow-[0px_1px_4px_rgba(3, 0, 92, 0.05)]  mt-10">
         <div className="h-full md:h-auto w-full md:rounded-t-2xl p-6 pt-2 md:pt-6 md:border-b border-solid border-gray-3 px-8 border-b-0">
               <h1 className="text-[22px] font-semibold text-gray-8">
                 {TITLE[action]}
@@ -245,7 +245,7 @@ function App() {
                         className="max-h-4 max-w-4 animate-spin"
                       />
                     }
-                    <p className="text-white text-bold text-base font-normal">Verify Address</p>
+                    <p className="text-white text-bold text-base font-normal">Verify address</p>
                   </button>
                   <p onClick={handleChangeWallet} role="button" className="block md:hidden text-base underline text-gray-7">
                     Change wallet
@@ -285,8 +285,8 @@ function App() {
               }
               {
                 activeStepNumber === 3 &&
-                <button onClick={handleSignInWithEthereum} className="flex w-full md:w-auto md:h-[42px] justify-center items-center px-6 py-2.5 bg-blue-4 border border-solid border-blue-4B shadow-blue-1 rounded-lg">
-                  <p className="text-white text-bold text-base font-normal">Redirecting in ({redirectTime}s)</p>
+                <button onClick={handleSignInWithEthereum} className="flex w-full md:w-auto md:h-[42px] justify-center items-center px-6 py-2.5 bg-white border border-solid border-gray-3 rounded-lg">
+                  <p className="text-blue-7 font-bold">Redirecting in ({redirectTime}s)</p>
                 </button>
               }
           </div>
