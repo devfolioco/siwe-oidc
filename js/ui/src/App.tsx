@@ -208,7 +208,7 @@ function App() {
       />
       <div className="md:rounded-2xl md:w-[600px] bg-white md:shadow-blue-1  mt-10">
         <div className="h-full md:h-auto w-full md:rounded-t-2xl p-6 pt-2 md:pt-6 md:border-b border-solid border-gray-3 px-8 border-b-0">
-              <h1 className="text-[22px] font-semibold text-black">
+              <h1 className="text-[22px] font-semibold text-gray-8">
                 {TITLE[action]}
               </h1>
         </div>
