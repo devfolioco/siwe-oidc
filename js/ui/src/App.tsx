@@ -94,7 +94,7 @@ function App() {
 
   const [count, { startCountdown }] =
     useCountdown({
-      countStart: 5,
+      countStart: 3,
       intervalMs: 1000,
     })
 
@@ -148,15 +148,17 @@ function App() {
 
       onVerifyAddressSuccess();
 
-      setTimeout(() => {Cookies.set("siwe", JSON.stringify(session), {
+      setTimeout(() => {
+        Cookies.set("siwe", JSON.stringify(session), {
         expires: expirationTime,
-      });
+        });
 
-      window.location.replace(
-        `/sign_in?redirect_uri=${encodeURI(redirect)}&state=${encodeURI(
-          state
-        )}&client_id=${encodeURI(client_id)}${encodeURI(oidc_nonce)}`
-      );}, 3000)
+        window.location.replace(
+          `/sign_in?redirect_uri=${encodeURI(redirect)}&state=${encodeURI(
+            state
+          )}&client_id=${encodeURI(client_id)}${encodeURI(oidc_nonce)}`
+        );
+      }, 3000)
       
       return;
     } catch (e) {
