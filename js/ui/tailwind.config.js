@@ -28,7 +28,7 @@ export default {
 				montserrat: ['Montserrat']
 			},
 			boxShadow: {
-				'blue-1': '0px 1px 4px rgba(3, 0, 92, 0.1)',
+				'blue-1': '0px 1px 4px rgba(3, 0, 92, 0.05)',
 				'inner-1': 'inset 0px 3px 8px rgba(179, 206, 255, 0.35)'
 			},
 			screens: {

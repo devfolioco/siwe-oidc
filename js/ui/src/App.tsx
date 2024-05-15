@@ -4,7 +4,7 @@ import { SiweMessage } from "siwe";
 import { useAccount, useDisconnect } from "wagmi";
 import Cookies from "js-cookie";
 import devfolioLogoFull from "./assets/devfolio-logo-full.svg";
-import signInWithEthereum from "./assets/sign-in-ethereum.svg";
+import connectWallet from './assets/connect-wallet.svg';
 import stepCheck from './assets/step-check.svg';
 import loader from './assets/loader.svg';
 
@@ -38,7 +38,7 @@ const CONNECT_WALLET: Record<STEP_STAGE, {header: string; subText: string}> = {
     subText:' is successfully connected'
   },
   'incomplete':{
-    header:'Connect Wallet',
+    header:'Connect wallet',
     subText:'Go to your wallet app and accept the connection request'
   }
 }
@@ -80,7 +80,7 @@ const Step = ({isCompleted, isActive, number, header, subText, address}:{isCompl
           {header}
         </p>
         <p className="text-base font-normal text-gray-7">
-          {address ? `${address.substring(0,6)}...${address.substring(-1,4)}`:''}{subText}
+          {address ? `${address.substring(0,6)}...${address.slice(-4)}`:''}{subText}
         </p>
       </div>
     </div>
@@ -206,88 +206,90 @@ function App() {
         width={174}
         className="mt-10 h-[27px] w-[135px] md:h-[36px] md:w-[174px] md:mt-16"
       />
-      <div className="h-full md:h-auto w-full md:w-[600px] bg-white md:rounded-t-2xl pt-2 md:pt-8 p-8 mt-10 md:border-b border-solid border-gray-3 px-8 border-b-0">
-            <h1 className="text-2xl font-semibold text-black">
-              {TITLE[action]}
-            </h1>
-      </div>
-      <div className="block md:invisible h-px bg-gray-3 w-5/6 mx-4" />
-      <div className="h-full w-full md:w-[600px] bg-white md:rounded-b-2xl pt-2 md:pt-8 p-8 flex flex-col justify-between">
-        <div className="flex flex-col mt-6 w-full justify-center">
-          <img
-            src={signInWithEthereum}
-            alt="An illustration showing a wallet linking"
-            height="191"
-            width="191"
-            className="mx-auto"
-          />
-
-          <div className="flex flex-col gap-4 mt-8">
-            <Step isActive={activeStepNumber === 1} isCompleted={walletConnectStage === 'complete'} number={1} header={CONNECT_WALLET[walletConnectStage].header} subText={CONNECT_WALLET[walletConnectStage].subText} address={account.address}/>
-            <Step isActive={activeStepNumber === 2} isCompleted={verifyAddressStage === 'complete'} number={2} header={VERIFY_ADDRESS[verifyAddressStage].header} subText={VERIFY_ADDRESS[verifyAddressStage].subText}/>
-          </div>
+      <div className="md:rounded-2xl md:w-[600px] bg-white md:shadow-blue-1  mt-10">
+        <div className="h-full md:h-auto w-full md:rounded-t-2xl p-6 pt-2 md:pt-6 md:border-b border-solid border-gray-3 px-8 border-b-0">
+              <h1 className="text-[22px] font-semibold text-black">
+                {TITLE[action]}
+              </h1>
         </div>
-        <div className={`flex flex-col w-full ${activeStepNumber === 2 ? 'justify-between' :'justify-end'} gap-4 md:gap-0 md:flex-row  items-center mt-10`}>
-            {activeStepNumber === 2 && 
-              <>
-                <p onClick={handleChangeWallet} role="button" className="block md-max:hidden text-base underline text-gray-7">
-                  Change wallet
-                </p>
-                <button onClick={handleSignInWithEthereum} className={`flex w-full md:w-auto justify-center items-center px-6 py-2.5 border border-solid ${isVerifyingAddress ? 'bg-blue-2 border-blue-2':'bg-blue-4 border-blue-4B'} shadow-blue-1 rounded-lg gap-2`}>
-                  {
-                    isVerifyingAddress && 
-                    <img
-                      src={loader}
-                      alt="Step Check"
-                      height={16}
-                      width={16}
-                      className="max-h-4 max-w-4 animate-spin"
-                    />
-                  }
-                  <p className="text-white text-bold text-base font-normal">Verify Address</p>
+        <div className="block md:invisible h-px bg-gray-3 w-5/6 mx-4" />
+        <div className="h-full w-full md:w-[600px] bg-white md:rounded-b-2xl pt-2 md:pt-8 p-8 flex flex-col justify-between">
+          <div className="flex flex-col mt-6 w-full justify-center">
+            <img
+              src={connectWallet}
+              alt="An illustration showing a wallet linking"
+              height="191"
+              width="191"
+              className="mx-auto"
+            />
+
+            <div className="flex flex-col gap-4 mt-8">
+              <Step isActive={activeStepNumber === 1} isCompleted={walletConnectStage === 'complete'} number={1} header={CONNECT_WALLET[walletConnectStage].header} subText={CONNECT_WALLET[walletConnectStage].subText} address={account.address}/>
+              <Step isActive={activeStepNumber === 2} isCompleted={verifyAddressStage === 'complete'} number={2} header={VERIFY_ADDRESS[verifyAddressStage].header} subText={VERIFY_ADDRESS[verifyAddressStage].subText}/>
+            </div>
+          </div>
+          <div className={`flex flex-col w-full ${activeStepNumber === 2 ? 'justify-between' :'justify-end'} gap-4 md:gap-0 md:flex-row  items-center mt-10`}>
+              {activeStepNumber === 2 && 
+                <>
+                  <p onClick={handleChangeWallet} role="button" className="block md-max:hidden text-base underline text-gray-7">
+                    Change wallet
+                  </p>
+                  <button onClick={handleSignInWithEthereum} className={`flex w-full md:w-auto md:h-[42px] justify-center items-center px-6 py-2.5 border border-solid ${isVerifyingAddress ? 'bg-blue-2 border-blue-2':'bg-blue-4 border-blue-4B'} shadow-blue-1 rounded-lg gap-2`}>
+                    {
+                      isVerifyingAddress && 
+                      <img
+                        src={loader}
+                        alt="Step Check"
+                        height={16}
+                        width={16}
+                        className="max-h-4 max-w-4 animate-spin"
+                      />
+                    }
+                    <p className="text-white text-bold text-base font-normal">Verify Address</p>
+                  </button>
+                  <p onClick={handleChangeWallet} role="button" className="block md:hidden text-base underline text-gray-7">
+                    Change wallet
+                  </p>
+                </>
+              }
+              {
+                activeStepNumber === 1 && 
+                <ConnectKitProvider
+                  theme="soft"
+                  debugMode
+                  customTheme={{
+                    "--ck-font-family": '"Nunito Sans", sans-serif',
+                    "--ck-primary-button-font-weight": 700,
+                    "--ck-modal-heading-font-weight": 800,
+                    "--ck-secondary-button-font-weight": 600,
+                  }}
+                >
+                  <ConnectKitButton.Custom>
+                    {({ show, isConnecting }) => (
+                      <button onClick={show} className={`flex w-full md:w-auto md:h-[42px] justify-center items-center px-6 py-2.5 border border-solid ${isConnecting ? 'bg-blue-2 border-blue-2':'bg-blue-4 border-blue-4B'}  shadow-blue-1 rounded-lg gap-2`}>
+                        {
+                          isConnecting && 
+                          <img
+                            src={loader}
+                            alt="Step Check"
+                            height={16}
+                            width={16}
+                            className="max-h-4 max-w-4 animate-spin"
+                          />
+                        }
+                        <p className="text-white text-bold text-base font-normal">Connect wallet</p>
+                      </button>
+                    )}
+                  </ConnectKitButton.Custom>
+                </ConnectKitProvider>
+              }
+              {
+                activeStepNumber === 3 &&
+                <button onClick={handleSignInWithEthereum} className="flex w-full md:w-auto md:h-[42px] justify-center items-center px-6 py-2.5 bg-blue-4 border border-solid border-blue-4B shadow-blue-1 rounded-lg">
+                  <p className="text-white text-bold text-base font-normal">Redirecting in ({redirectTime}s)</p>
                 </button>
-                <p onClick={handleChangeWallet} role="button" className="block md:hidden text-base underline text-gray-7">
-                  Change wallet
-                </p>
-              </>
-            }
-            {
-              activeStepNumber === 1 && 
-              <ConnectKitProvider
-                theme="soft"
-                debugMode
-                customTheme={{
-                  "--ck-font-family": '"Nunito Sans", sans-serif',
-                  "--ck-primary-button-font-weight": 700,
-                  "--ck-modal-heading-font-weight": 800,
-                  "--ck-secondary-button-font-weight": 600,
-                }}
-              >
-                <ConnectKitButton.Custom>
-                  {({ show, isConnecting }) => (
-                    <button onClick={show} className={`flex w-full md:w-auto justify-center items-center px-6 py-2.5 border border-solid ${isConnecting ? 'bg-blue-2 border-blue-2':'bg-blue-4 border-blue-4B'}  shadow-blue-1 rounded-lg gap-2`}>
-                      {
-                        isConnecting && 
-                        <img
-                          src={loader}
-                          alt="Step Check"
-                          height={16}
-                          width={16}
-                          className="max-h-4 max-w-4 animate-spin"
-                        />
-                      }
-                      <p className="text-white text-bold text-base font-normal">Connect Wallet</p>
-                    </button>
-                  )}
-                </ConnectKitButton.Custom>
-              </ConnectKitProvider>
-            }
-            {
-              activeStepNumber === 3 &&
-              <button onClick={handleSignInWithEthereum} className="flex w-full md:w-auto justify-center items-center px-6 py-2.5 bg-blue-4 border border-solid border-blue-4B shadow-blue-1 rounded-lg">
-                <p className="text-white text-bold text-base font-normal">Redirecting in ({redirectTime}s)</p>
-              </button>
-            }
+              }
+          </div>
         </div>
       </div>
       <div className="block md-max:hidden w-[600px] h-[1px] bg-gray-3 mt-10 " />
