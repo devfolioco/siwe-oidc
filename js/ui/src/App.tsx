@@ -7,6 +7,7 @@ import devfolioLogoFull from "./assets/devfolio-logo-full.svg";
 import connectWallet from './assets/connect-wallet.svg';
 import stepCheck from './assets/step-check.svg';
 import loader from './assets/loader.svg';
+import { useCountdown } from 'usehooks-ts'
 
 
 type ACTION_TYPE = 'signin' | 'signup' | 'connect';
@@ -54,9 +55,6 @@ const VERIFY_ADDRESS:Record<STEP_STAGE, {header: string; subText: string}> = {
   }
 }
 
-const dateDifferenceInSeconds = (dateFinal: Date) =>
-  Math.floor((dateFinal.getTime() - new Date().getTime()) / 1_000);
-
 const Step = ({isCompleted, isActive, number, header, subText, address}:{isCompleted: boolean; isActive: boolean; number: number;header: string; subText: string; address?: string}) => {
   return (
     <div className={`flex p-5 gap-5 justify-start items-center rounded-lg ${isActive? 'border-2 border-solid border-blue-3':'border border-solid border-gray-3'}`}>
@@ -93,20 +91,20 @@ function App() {
 
   const [isVerifyingAddress, setIsVerifyingAddress] = React.useState<boolean>(false);
   const [activeStepNumber, setActiveStepNumber] = React.useState<number>(1);
-  const [redirectMaxTime, setRedirectMaxTime] = React.useState<Date | null>(null);
-  const [redirectTime, setRedirectTime] = React.useState<number>(5);
+
+  const [count, { startCountdown }] =
+    useCountdown({
+      countStart: 5,
+      intervalMs: 1000,
+    })
 
   const onWalletConnectSuccess = () => {
     setActiveStepNumber(2);
   };
 
-
   const onVerifyAddressSuccess = () => {
-
-    // Set max redirect time to show the countdown in button
-    const maxRedirectTime = new Date();
-    maxRedirectTime.setSeconds(maxRedirectTime.getSeconds()+5);
-    setRedirectMaxTime(maxRedirectTime);
+    // Start countdown for redirect
+    startCountdown();
     setIsVerifyingAddress(false);
 
     setActiveStepNumber(3);
@@ -171,16 +169,6 @@ function App() {
     e.preventDefault();
     await disconnect();
   }
-
-  React.useEffect(() => {
-    if(redirectMaxTime)
-    {
-        setInterval(() => {
-          console.log({diff:dateDifferenceInSeconds(redirectMaxTime as Date)})
-          setRedirectTime(dateDifferenceInSeconds(redirectMaxTime as Date));
-        }, 1000);
-    }
-  }, [redirectMaxTime])
 
   React.useEffect(() => {
     if (typeof account.address === "string" && activeStepNumber === 1) {
@@ -286,7 +274,7 @@ function App() {
               {
                 activeStepNumber === 3 &&
                 <button onClick={handleSignInWithEthereum} className="flex w-full md:w-auto md:h-[42px] justify-center items-center px-6 py-2.5 bg-white border border-solid border-gray-3 rounded-lg">
-                  <p className="text-blue-7 font-bold">Redirecting in ({redirectTime}s)</p>
+                  <p className="text-blue-7 font-bold">Redirecting in ({count}s)</p>
                 </button>
               }
           </div>
