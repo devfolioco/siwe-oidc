@@ -3,7 +3,7 @@ import ReactDOM from "react-dom/client";
 import { WagmiProvider, createConfig, http, fallback } from "wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { mainnet } from "wagmi/chains";
-
+import { injected, coinbaseWallet, walletConnect } from "wagmi/connectors";
 import { getDefaultConfig } from "connectkit";
 import App from "./App";
 import "./index.css";
@@ -21,6 +21,25 @@ const config = createConfig(
     appUrl: "https://devfolio.co", // your app's url
     appIcon: "https://siwe.devfolio.co/favicon.png", // your app's logo,no bigger than 1024x1024px (max. 1MB)
     // autoConnect: false,
+    connectors: [
+      injected({ target: "metaMask" }),
+      coinbaseWallet({
+        appName: "SIWE | Devfolio",
+        appLogoUrl: "https://siwe.devfolio.co/favicon.png",
+        headlessMode: true,
+        overrideIsMetaMask: false,
+      }),
+      walletConnect({
+        showQrModal: false,
+        projectId: process.env.WALLET_CONNECT_ID ?? "",
+        metadata: {
+          name: "SIWE | Devfolio",
+          description: "Some description",
+          url: "https://devfolio.co",
+          icons: ["https://siwe.devfolio.co/favicon.png"],
+        },
+      }),
+    ],
 
     chains: [mainnet],
     transports: {
