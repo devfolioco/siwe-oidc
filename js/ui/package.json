@@ -20,6 +20,9 @@
     "viem": "1.1.7",
     "wagmi": "1.3.0"
   },
+  "resolutions": {
+    "@coinbase/wallet-sdk": "4.0.3"
+  },
   "devDependencies": {
     "@babel/core": "7.22.5",
     "@babel/preset-env": "7.22.5",
