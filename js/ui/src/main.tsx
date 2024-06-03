@@ -9,12 +9,12 @@ import App from "./App";
 import "./index.css";
 const queryClient = new QueryClient();
 
-const config = createConfig(
+export const config = createConfig(
   getDefaultConfig({
     // Required API Keys
     // infuraId: process.env.INFURA_ID,
 
-    walletConnectProjectId: process.env.WALLET_CONNECT_ID ?? "",
+    walletConnectProjectId: "aded953fd76c6ee04f0b785bc5cbe5ba" ?? "",
 
     // Required
     appName: "SIWE | Devfolio",
@@ -31,7 +31,7 @@ const config = createConfig(
       }),
       walletConnect({
         showQrModal: false,
-        projectId: process.env.WALLET_CONNECT_ID ?? "",
+        projectId: "aded953fd76c6ee04f0b785bc5cbe5ba" ?? "",
         metadata: {
           name: "SIWE | Devfolio",
           description: "Some description",
