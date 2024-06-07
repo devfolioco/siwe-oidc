@@ -138,6 +138,7 @@ function App() {
     console.log("Inside useeffect", { signature });
     if (typeof signature === "string") {
       setLocalSignature(signature);
+      localStorage.setItem("siweSignature", signature);
     }
   }, [signature]);
   React.useEffect(() => {
@@ -189,15 +190,23 @@ function App() {
       const session = {
         message,
         raw: signMessage,
-        signature: localSignature,
+        signature: localStorage.getItem("siweSignature") ?? localSignature,
       };
       onVerifyAddressSuccess();
 
       setTimeout(() => {
         console.log("Inside timeout", { localSignature, session });
-        Cookies.set("siwe", JSON.stringify(session), {
-          expires: expirationTime,
-        });
+        Cookies.set(
+          "siwe",
+          JSON.stringify({
+            ...session,
+            signature: localStorage.getItem("siweSignature") ?? localSignature,
+          }),
+          {
+            expires: expirationTime,
+          }
+        );
+        localStorage;
 
         window.location.replace(
           `/sign_in?redirect_uri=${encodeURI(redirect)}&state=${encodeURI(
