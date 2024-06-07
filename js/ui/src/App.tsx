@@ -148,12 +148,7 @@ function App() {
     let redirectTimeout: NodeJS.Timeout;
     const onVerifyAddressSuccess = () => {
       // Start countdown for redirect
-      if (
-        !localSession?.message ||
-        !localSession?.raw ||
-        !localSession?.signature
-      )
-        return;
+      if (!localSession?.message || !localSession?.raw) return;
       startCountdown();
       setIsVerifyingAddress(false);
 
