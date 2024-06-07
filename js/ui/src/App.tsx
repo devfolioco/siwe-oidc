@@ -130,20 +130,15 @@ function App() {
     React.useState<boolean>(false);
   const [activeStepNumber, setActiveStepNumber] = React.useState<number>(1);
   const [count, { startCountdown }] = useCountdown({
-    countStart: 3,
+    countStart: 6,
     intervalMs: 1000,
   });
 
   React.useEffect(() => {
-    console.log("Inside useeffect", { signature });
     if (typeof signature === "string") {
       setLocalSignature(signature);
-      localStorage.setItem("siweSignature", signature);
     }
   }, [signature]);
-  React.useEffect(() => {
-    console.log("Inside useeffect", { localSignature });
-  }, [localSignature]);
   const onWalletConnectSuccess = () => {
     setActiveStepNumber(2);
   };
@@ -184,36 +179,27 @@ function App() {
         message: signMessage,
       });
 
-      console.log("Before const message", { localSignature });
       const message = new SiweMessage(signMessage);
-      console.log("Before const session", { localSignature });
       const session = {
         message,
         raw: signMessage,
-        signature: localStorage.getItem("siweSignature") ?? localSignature,
+        signature: localSignature,
       };
       onVerifyAddressSuccess();
 
       setTimeout(() => {
-        console.log("Inside timeout", { localSignature, session });
-        Cookies.set(
-          "siwe",
-          JSON.stringify({
-            ...session,
-            signature: localStorage.getItem("siweSignature") ?? localSignature,
-          }),
-          {
-            expires: expirationTime,
-          }
-        );
-        localStorage;
+        Cookies.set("siwe", JSON.stringify(session), {
+          expires: expirationTime,
+        });
+      }, 5);
 
+      setTimeout(() => {
         window.location.replace(
           `/sign_in?redirect_uri=${encodeURI(redirect)}&state=${encodeURI(
             state
           )}&client_id=${encodeURI(client_id)}${encodeURI(oidc_nonce)}`
         );
-      }, 15000);
+      }, 6);
 
       return;
     } catch (e) {
