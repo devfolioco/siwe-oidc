@@ -1,13 +1,7 @@
 import React from "react";
 import { ConnectKitButton, ConnectKitProvider } from "connectkit";
 import { SiweMessage } from "siwe";
-import {
-  useAccount,
-  useChainId,
-  useDisconnect,
-  useSignMessage,
-  useWalletClient,
-} from "wagmi";
+import { useAccount, useChainId, useDisconnect, useSignMessage } from "wagmi";
 import Cookies from "js-cookie";
 import devfolioLogoFull from "./assets/devfolio-logo-full.svg";
 import connectWallet from "./assets/connect-wallet.svg";
@@ -122,14 +116,13 @@ const Step = ({
 function App() {
   const account = useAccount();
   const { disconnect } = useDisconnect();
-  const walletClient = useWalletClient();
   const chainId = useChainId();
-  const { signMessage: wagmiSignMessage, data: signature } = useSignMessage();
   const [localSession, setLocalSession] = React.useState<{
     message: SiweMessage;
     raw: string;
     signature?: string;
   } | null>(null);
+
   const expirationTime = React.useMemo(() => {
     return new Date(
       new Date().getTime() + 2 * 24 * 60 * 60 * 1000 // 48h
@@ -142,46 +135,56 @@ function App() {
     countStart: 10,
     intervalMs: 1000,
   });
+  let siweSessionTimeout: NodeJS.Timeout;
+  let redirectTimeout: NodeJS.Timeout;
+
+  const onVerifyAddressSuccess = (signature?: string) => {
+    // Start countdown for redirect
+    if (
+      !localSession?.message ||
+      !localSession?.raw ||
+      typeof signature !== "string" ||
+      signature?.length === 0
+    )
+      return;
+    startCountdown();
+    setIsVerifyingAddress(false);
+
+    setActiveStepNumber(3);
+    siweSessionTimeout = setTimeout(() => {
+      Cookies.set(
+        "siwe",
+        JSON.stringify({
+          ...localSession,
+          signature,
+        }),
+        {
+          expires: expirationTime,
+        }
+      );
+    }, 5000);
+    redirectTimeout = setTimeout(() => {
+      window.location.replace(
+        `/sign_in?redirect_uri=${encodeURI(redirect)}&state=${encodeURI(
+          state
+        )}&client_id=${encodeURI(client_id)}${encodeURI(oidc_nonce)}`
+      );
+    }, 10000);
+  };
+
+  const { signMessage: wagmiSignMessage } = useSignMessage({
+    mutation: {
+      onSuccess: (signature) => onVerifyAddressSuccess(signature),
+    },
+  });
 
   React.useEffect(() => {
-    let siweSessionTimeout: NodeJS.Timeout;
-    let redirectTimeout: NodeJS.Timeout;
-    const onVerifyAddressSuccess = () => {
-      // Start countdown for redirect
-      if (!localSession?.message || !localSession?.raw) return;
-      startCountdown();
-      setIsVerifyingAddress(false);
-
-      setActiveStepNumber(3);
-      siweSessionTimeout = setTimeout(() => {
-        Cookies.set(
-          "siwe",
-          JSON.stringify({
-            ...localSession,
-            signature,
-          }),
-          {
-            expires: expirationTime,
-          }
-        );
-      }, 5000);
-      redirectTimeout = setTimeout(() => {
-        window.location.replace(
-          `/sign_in?redirect_uri=${encodeURI(redirect)}&state=${encodeURI(
-            state
-          )}&client_id=${encodeURI(client_id)}${encodeURI(oidc_nonce)}`
-        );
-      }, 10000);
-    };
-    if (typeof signature === "string" && signature.length > 0) {
-      onVerifyAddressSuccess();
-    }
-
     return () => {
       clearTimeout(siweSessionTimeout);
       clearTimeout(redirectTimeout);
     };
-  }, [signature]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const onWalletConnectSuccess = () => {
     setActiveStepNumber(2);
