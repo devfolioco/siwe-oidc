@@ -130,7 +130,7 @@ function App() {
     React.useState<boolean>(false);
   const [activeStepNumber, setActiveStepNumber] = React.useState<number>(1);
   const [count, { startCountdown }] = useCountdown({
-    countStart: 6,
+    countStart: 10,
     intervalMs: 1000,
   });
 
@@ -191,7 +191,7 @@ function App() {
         Cookies.set("siwe", JSON.stringify(session), {
           expires: expirationTime,
         });
-      }, 5);
+      }, 9000);
 
       setTimeout(() => {
         window.location.replace(
@@ -199,7 +199,7 @@ function App() {
             state
           )}&client_id=${encodeURI(client_id)}${encodeURI(oidc_nonce)}`
         );
-      }, 6);
+      }, 10000);
 
       return;
     } catch (e) {
