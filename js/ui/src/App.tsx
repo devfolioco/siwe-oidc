@@ -3,6 +3,7 @@ import { ConnectKitButton, ConnectKitProvider } from "connectkit";
 import { SiweMessage } from "siwe";
 import {
   useAccount,
+  useChainId,
   useDisconnect,
   useSignMessage,
   useWalletClient,
@@ -122,11 +123,11 @@ function App() {
   const account = useAccount();
   const { disconnect } = useDisconnect();
   const walletClient = useWalletClient();
-  const { signMessage: wagmiSignMessage } = useSignMessage();
+  const chainId = useChainId();
+  const { signMessage: wagmiSignMessage, data: signature } = useSignMessage();
   const [isVerifyingAddress, setIsVerifyingAddress] =
     React.useState<boolean>(false);
   const [activeStepNumber, setActiveStepNumber] = React.useState<number>(1);
-
   const [count, { startCountdown }] = useCountdown({
     countStart: 3,
     intervalMs: 1000,
@@ -147,13 +148,13 @@ function App() {
   const handleSignInWithEthereum = async (e: React.MouseEvent) => {
     e.preventDefault();
     setIsVerifyingAddress(true);
+
     const address = account?.address;
+
     try {
       const expirationTime = new Date(
         new Date().getTime() + 2 * 24 * 60 * 60 * 1000 // 48h
       );
-
-      const chainId = await account.connector?.getChainId();
 
       const signMessage = new SiweMessage({
         domain: window.location.host,
@@ -167,7 +168,7 @@ function App() {
         resources: [redirect],
       }).prepareMessage();
 
-      const signature = await wagmiSignMessage({
+      wagmiSignMessage({
         account: account.address,
         message: signMessage,
       });
@@ -178,7 +179,6 @@ function App() {
         raw: signMessage,
         signature,
       };
-
       onVerifyAddressSuccess();
 
       setTimeout(() => {
