@@ -125,6 +125,7 @@ function App() {
   const walletClient = useWalletClient();
   const chainId = useChainId();
   const { signMessage: wagmiSignMessage, data: signature } = useSignMessage();
+  const [localSignature, setLocalSignature] = React.useState("");
   const [isVerifyingAddress, setIsVerifyingAddress] =
     React.useState<boolean>(false);
   const [activeStepNumber, setActiveStepNumber] = React.useState<number>(1);
@@ -133,6 +134,15 @@ function App() {
     intervalMs: 1000,
   });
 
+  React.useEffect(() => {
+    console.log("Inside useeffect", { signature });
+    if (typeof signature === "string") {
+      setLocalSignature(signature);
+    }
+  }, [signature]);
+  React.useEffect(() => {
+    console.log("Inside useeffect", { localSignature });
+  }, [localSignature]);
   const onWalletConnectSuccess = () => {
     setActiveStepNumber(2);
   };
@@ -173,15 +183,18 @@ function App() {
         message: signMessage,
       });
 
+      console.log("Before const message", { localSignature });
       const message = new SiweMessage(signMessage);
+      console.log("Before const session", { localSignature });
       const session = {
         message,
         raw: signMessage,
-        signature,
+        signature: localSignature,
       };
       onVerifyAddressSuccess();
 
       setTimeout(() => {
+        console.log("Inside timeout", { localSignature, session });
         Cookies.set("siwe", JSON.stringify(session), {
           expires: expirationTime,
         });
