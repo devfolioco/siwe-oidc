@@ -191,7 +191,7 @@ function App() {
             state
           )}&client_id=${encodeURI(client_id)}${encodeURI(oidc_nonce)}`
         );
-      }, 3000);
+      }, 15000);
 
       return;
     } catch (e) {
