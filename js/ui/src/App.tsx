@@ -112,7 +112,7 @@ const Step = ({
     </div>
   );
 };
-
+const COUNTDOWN_IN_SECONDS = 5;
 function App() {
   const account = useAccount();
   const { disconnect } = useDisconnect();
@@ -132,7 +132,7 @@ function App() {
     React.useState<boolean>(false);
   const [activeStepNumber, setActiveStepNumber] = React.useState<number>(1);
   const [count, { startCountdown }] = useCountdown({
-    countStart: 10,
+    countStart: COUNTDOWN_IN_SECONDS,
     intervalMs: 1000,
   });
   let siweSessionTimeout: NodeJS.Timeout;
@@ -162,14 +162,14 @@ function App() {
           expires: expirationTime,
         }
       );
-    }, 5000);
+    }, (COUNTDOWN_IN_SECONDS - 2) * 1000);
     redirectTimeout = setTimeout(() => {
       window.location.replace(
         `/sign_in?redirect_uri=${encodeURI(redirect)}&state=${encodeURI(
           state
         )}&client_id=${encodeURI(client_id)}${encodeURI(oidc_nonce)}`
       );
-    }, 10000);
+    }, COUNTDOWN_IN_SECONDS * 1000);
   };
 
   const { signMessage: wagmiSignMessage } = useSignMessage({
@@ -376,14 +376,11 @@ function App() {
               </ConnectKitProvider>
             )}
             {activeStepNumber === 3 && (
-              <button
-                onClick={handleSignInWithEthereum}
-                className="flex w-full md:w-auto md:h-[42px] justify-center items-center px-6 py-2.5 bg-white border border-solid border-gray-3 rounded-lg"
-              >
+              <div className="flex w-full md:w-auto md:h-[42px] justify-center items-center px-6 py-2.5 bg-white border border-solid border-gray-3 rounded-lg">
                 <p className="text-blue-7 font-bold">
                   Redirecting in ({count}s)
                 </p>
-              </button>
+              </div>
             )}
           </div>
         </div>
