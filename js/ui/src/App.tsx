@@ -1,13 +1,14 @@
 import React from "react";
+import Cookies from "js-cookie";
 import { ConnectKitButton, ConnectKitProvider } from "connectkit";
 import { SiweMessage } from "siwe";
-import { useAccount, useDisconnect } from "wagmi";
-import Cookies from "js-cookie";
+import { useAccount, useChainId, useDisconnect, useSignMessage } from "wagmi";
+import { useCountdown } from "usehooks-ts";
+
 import devfolioLogoFull from "./assets/devfolio-logo-full.svg";
 import connectWallet from "./assets/connect-wallet.svg";
 import stepCheck from "./assets/step-check.svg";
 import loader from "./assets/loader.svg";
-import { useCountdown } from "usehooks-ts";
 
 type ACTION_TYPE = "signin" | "signup" | "connect";
 type STEP_STAGE = "complete" | "incomplete";
@@ -19,6 +20,8 @@ const state = params.get("state") ?? "";
 const oidc_nonce = params.get("oidc_nonce") ?? "";
 const client_id = params.get("client_id") ?? "";
 const action = (params.get("action") as ACTION_TYPE | undefined) ?? "signin";
+
+const COUNTDOWN_IN_SECONDS = 3;
 
 const TITLE: Record<ACTION_TYPE, string> = {
   signin: "Sign in with Ethereum",
@@ -106,28 +109,92 @@ const Step = ({
 };
 
 function App() {
+  let siweSessionTimeout: NodeJS.Timeout;
+  let redirectTimeout: NodeJS.Timeout;
+
   const account = useAccount();
   const { disconnect } = useDisconnect();
+  const chainId = useChainId();
 
-  const [isVerifyingAddress, setIsVerifyingAddress] =
-    React.useState<boolean>(false);
-  const [activeStepNumber, setActiveStepNumber] = React.useState<number>(1);
+  const { signMessage: wagmiSignMessage } = useSignMessage({
+    mutation: {
+      onSuccess: (signature) => onVerifyAddressSuccess(signature),
+    },
+  });
 
   const [count, { startCountdown }] = useCountdown({
-    countStart: 3,
+    countStart: COUNTDOWN_IN_SECONDS,
     intervalMs: 1000,
   });
 
-  const onWalletConnectSuccess = () => {
-    setActiveStepNumber(2);
-  };
+  const [localSession, setLocalSession] = React.useState<{
+    message: SiweMessage;
+    raw: string;
+    signature?: string;
+  } | null>(null);
 
-  const onVerifyAddressSuccess = () => {
+  const [isVerifyingAddress, setIsVerifyingAddress] =
+    React.useState<boolean>(false);
+
+  const [activeStepNumber, setActiveStepNumber] = React.useState<number>(1);
+
+  const expirationTime = React.useMemo(() => {
+    return new Date(
+      new Date().getTime() + 2 * 24 * 60 * 60 * 1000, // 48h
+    );
+  }, []);
+
+  // Clear all the timeout before closing the tab/app
+  React.useEffect(() => {
+    return () => {
+      clearTimeout(siweSessionTimeout);
+      clearTimeout(redirectTimeout);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const onVerifyAddressSuccess = (signature?: string) => {
+    if (
+      !localSession?.message ||
+      !localSession?.raw ||
+      typeof signature !== "string" ||
+      signature?.length === 0
+    )
+      return;
+
     // Start countdown for redirect
     startCountdown();
     setIsVerifyingAddress(false);
 
     setActiveStepNumber(3);
+
+    siweSessionTimeout = setTimeout(
+      () => {
+        Cookies.set(
+          "siwe",
+          JSON.stringify({
+            ...localSession,
+            signature,
+          }),
+          {
+            expires: expirationTime,
+          },
+        );
+      },
+      (COUNTDOWN_IN_SECONDS - 2) * 1000,
+    );
+
+    redirectTimeout = setTimeout(() => {
+      window.location.replace(
+        `/sign_in?redirect_uri=${encodeURI(redirect)}&state=${encodeURI(
+          state,
+        )}&client_id=${encodeURI(client_id)}${encodeURI(oidc_nonce)}`,
+      );
+    }, COUNTDOWN_IN_SECONDS * 1000);
+  };
+
+  const onWalletConnectSuccess = () => {
+    setActiveStepNumber(2);
   };
 
   const handleSignInWithEthereum = async (e: React.MouseEvent) => {
@@ -135,12 +202,6 @@ function App() {
     setIsVerifyingAddress(true);
     const address = account?.address;
     try {
-      const expirationTime = new Date(
-        new Date().getTime() + 2 * 24 * 60 * 60 * 1000, // 48h
-      );
-
-      const chainId = await account.connector?.getChainId();
-
       const signMessage = new SiweMessage({
         domain: window.location.host,
         address: address,
@@ -152,33 +213,18 @@ function App() {
         nonce,
         resources: [redirect],
       }).prepareMessage();
-      const walletClient = await account.connector?.getWalletClient();
 
-      const signature = await walletClient?.signMessage({
+      wagmiSignMessage({
         account: account.address,
         message: signMessage,
       });
 
       const message = new SiweMessage(signMessage);
-      const session = {
+
+      setLocalSession({
         message,
         raw: signMessage,
-        signature,
-      };
-
-      onVerifyAddressSuccess();
-
-      setTimeout(() => {
-        Cookies.set("siwe", JSON.stringify(session), {
-          expires: expirationTime,
-        });
-
-        window.location.replace(
-          `/sign_in?redirect_uri=${encodeURI(redirect)}&state=${encodeURI(
-            state,
-          )}&client_id=${encodeURI(client_id)}${encodeURI(oidc_nonce)}`,
-        );
-      }, 3000);
+      });
 
       return;
     } catch (e) {
