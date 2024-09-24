@@ -7,6 +7,7 @@ import { mainnet } from "wagmi/chains";
 
 import App from "./App";
 import "./index.css";
+import { coinbaseWallet, injected } from "wagmi/connectors";
 
 const config = createConfig(
   getDefaultConfig({
@@ -20,6 +21,7 @@ const config = createConfig(
         http(), // public fallback
       ]),
     },
+    connectors: [injected(), coinbaseWallet()],
 
     // Required
     appName: "SIWE | Devfolio",
