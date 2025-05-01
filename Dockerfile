@@ -1,19 +1,6 @@
-FROM clux/muslrust:stable as chef
+FROM node:20-alpine as builder
+
 WORKDIR /siwe-oidc
-RUN cargo install cargo-chef
-
-FROM chef as dep_planner
-COPY ./src/ ./src/
-COPY ./Cargo.lock ./
-COPY ./Cargo.toml ./
-COPY ./siwe-oidc.toml ./
-RUN cargo chef prepare  --recipe-path recipe.json
-
-FROM chef as dep_cacher
-COPY --from=dep_planner /siwe-oidc/recipe.json recipe.json
-RUN cargo chef cook --release --recipe-path recipe.json
-
-FROM node:18.20.0-alpine3.18 as node_builder
 
 # Reference https://github.com/mhart/alpine-node/issues/27#issuecomment-880663905
 RUN apk add --no-cache --virtual .build-deps alpine-sdk python3
@@ -24,27 +11,45 @@ ARG WALLET_CONNECT_ID
 ENV INFURA_ID=${INFURA_ID}
 ENV WALLET_CONNECT_ID=${WALLET_CONNECT_ID}
 
+# Copy static files and UI
 ADD --chown=node:node ./static /siwe-oidc/static
 ADD --chown=node:node ./js/ui /siwe-oidc/js/ui
 WORKDIR /siwe-oidc/js/ui
 RUN yarn
 RUN yarn build
 
-FROM chef as builder
-COPY --from=dep_cacher /siwe-oidc/target/ ./target/
-COPY --from=dep_cacher $CARGO_HOME $CARGO_HOME
-COPY --from=dep_planner /siwe-oidc/ ./
-RUN cargo build --release
+# Build the Node.js application
+FROM node:20-alpine
 
-FROM alpine
-COPY --from=builder /siwe-oidc/target/x86_64-unknown-linux-musl/release/siwe-oidc /usr/local/bin/
 WORKDIR /siwe-oidc
-RUN mkdir -p ./static
-COPY --from=node_builder /siwe-oidc/static/ ./static/
-COPY --from=builder /siwe-oidc/siwe-oidc.toml ./
+COPY ./siwe-oidc-js ./siwe-oidc-js
+WORKDIR /siwe-oidc/siwe-oidc-js
+
+# Install dependencies
+RUN npm install
+
+# Copy application source
+COPY . .
+
+# Copy static files from builder
+COPY --from=builder /siwe-oidc/static/ ./static/
+
+# Generate RSA key if not provided
+RUN if [ -z "$RSA_PEM" ]; then \
+    apk add --no-cache openssl && \
+    openssl genrsa -out /tmp/private.pem 2048 && \
+    export RSA_PEM=$(cat /tmp/private.pem) && \
+    rm /tmp/private.pem; \
+    fi
+
+# Set environment variables
 ENV SIWEOIDC_ADDRESS="0.0.0.0"
+# Expose port
 EXPOSE 8000
-ENTRYPOINT ["siwe-oidc"]
+# Start the application
+CMD ["npm", "start"]
+
+# Labels
 LABEL org.opencontainers.image.source https://github.com/spruceid/siwe-oidc
 LABEL org.opencontainers.image.description "OpenID Connect Identity Provider for Sign-In with Ethereum"
 LABEL org.opencontainers.image.licenses "MIT OR Apache-2.0"

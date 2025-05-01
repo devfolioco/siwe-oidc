@@ -1,5 +1,5 @@
 **/target
 /static
 **/wrangler.toml
-**/node_module
+**/node_modules
 **/dist
