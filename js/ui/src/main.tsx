@@ -4,9 +4,16 @@ import { WagmiProvider, createConfig, fallback, http } from "wagmi";
 import { getDefaultConfig } from "connectkit";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { mainnet } from "wagmi/chains";
+import { coinbaseWallet } from "wagmi/connectors";
 
 import App from "./App";
 import "./index.css";
+
+const coinbaseWalletConnector = coinbaseWallet({
+  appName: "SIWE | Devfolio",
+  darkMode: true,
+  preference: "all",
+});
 
 const config = createConfig(
   getDefaultConfig({
@@ -20,7 +27,7 @@ const config = createConfig(
         http(), // public fallback
       ]),
     },
-
+    connectors: [coinbaseWalletConnector],
     // Required
     appName: "SIWE | Devfolio",
     appUrl: "https://devfolio.co", // your app's url
