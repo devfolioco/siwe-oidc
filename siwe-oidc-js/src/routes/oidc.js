@@ -2,6 +2,7 @@ import express from 'express';
 import { body, query } from 'express-validator';
 import oidcService from '../services/oidc.js';
 import db from '../db/redis.js';
+import { SiweMessage } from 'siwe';
 
 const router = express.Router();
 
@@ -59,7 +60,7 @@ router.get('/authorize',
     query('nonce').optional().isString(),
     async (req, res) => {
         try {
-            const { sessionId, authCode } = await oidcService.handleAuthorizationRequest(req.query);
+            const { sessionId, redirect, cookie } = await oidcService.handleAuthorizationRequest(req.query);
             
             // Set session cookie
             res.cookie('session', sessionId, {
@@ -69,7 +70,7 @@ router.get('/authorize',
             });
 
             // Redirect to SIWE sign-in page
-            res.redirect(`/sign_in?code=${authCode}`);
+            res.redirect(`${redirect}`);
         } catch (error) {
             res.status(400).json({ error: error.message });
         }
@@ -101,7 +102,7 @@ router.get('/sign_in',
             }
 
             // Extract Ethereum address from SIWE message
-            const siweMessage = new Message(message);
+            const siweMessage = new SiweMessage(message);
             const address = siweMessage.address;
             
             // Resolve ENS name if available
@@ -114,14 +115,37 @@ router.get('/sign_in',
             await db.setSession(sessionId, {
                 ...session,
                 sub,
-                ensName
+                ensName,
+
+            });
+
+            // Generate a unique authorization code
+            const authCode = crypto.randomUUID();
+            
+            // Create auth code entry with user information
+            const codeEntry = {
+                address,
+                nonce: req.query.nonce || null,
+                exchangeCount: 0,
+                clientId: req.query.client_id,
+                authTime: new Date().toISOString(),
+                chainId: siweMessage.chainId
+            };
+            
+            // Store the auth code with a short TTL (5 minutes)
+            await db.setAuthCode(authCode, codeEntry);
+            
+            // Update session with the auth code
+            await db.setSession(sessionId, {
+                ...JSON.parse(session),
+                signInCount: (JSON.parse(session).signInCount || 0) + 1
             });
 
             // Redirect back to client with authorization code
-            const redirectUri = new URL(session.redirect_uri);
-            redirectUri.searchParams.set('code', session.authCode);
-            if (session.state) {
-                redirectUri.searchParams.set('state', session.state);
+            const redirectUri = new URL(req.query.redirect_uri);
+            redirectUri.searchParams.set('code', authCode);
+            if (req.query.state) {
+                redirectUri.searchParams.set('state', req.query.state);
             }
 
             res.redirect(redirectUri.toString());

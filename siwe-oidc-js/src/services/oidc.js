@@ -59,35 +59,24 @@ class OIDCService {
 
         const authCode = await db.getAuthCode(code);
         if (!authCode) {
+            console.log('Invalid authorization code');
             throw new Error('Invalid authorization code');
         }
 
-        const client = await db.getClient(client_id);
-        if (!client) {
-            throw new Error('Invalid client');
-        }
+        // const client = await db.getClient(client_id);
+        // if (!client) {
+        //     throw new Error('Invalid client');
+        // }
 
         // Verify client credentials
-        if (config.requireSecret && client_secret !== client.client_secret) {
-            throw new Error('Invalid client credentials');
-        }
+        // if (config.requireSecret && client_secret !== client.client_secret) {
+        //     throw new Error('Invalid client credentials');
+        // }
 
-        // Generate tokens
-        const accessToken = randomBytes(32).toString('hex');
         const idToken = await this.generateIdToken(authCode);
 
-        // Store tokens
-        await db.setToken(accessToken, {
-            client_id,
-            scope: authCode.scope,
-            sub: authCode.sub
-        });
-
-        // Delete used auth code
-        await db.deleteAuthCode(code);
-
         return {
-            access_token: accessToken,
+            access_token: code,
             token_type: 'Bearer',
             expires_in: 3600,
             id_token: idToken
@@ -96,53 +85,121 @@ class OIDCService {
 
     // Authorization endpoint
     async handleAuthorizationRequest(query) {
-        const { client_id, redirect_uri, scope, state, nonce } = query;
+        const { client_id, redirect_uri, scope, response_type, state, nonce, prompt, request_uri, request, action } = query;
+
+        // Generate nonce for SIWE
+        const siweNonce = randomBytes(16).toString('base64').replace(/[+/=]/g, '');
         
-        const client = await db.getClient(client_id);
-        if (!client) {
-            throw new Error('Invalid client');
+        // Validate redirect URI
+        const redirectUrl = new URL(redirect_uri);
+        redirectUrl.search = '';
+        
+        // const clientRedirectUris = client.redirect_uris.map(uri => {
+        //     const url = new URL(uri);
+        //     url.search = '';
+        //     return url.toString();
+        // });
+        
+        // if (!clientRedirectUris.includes(redirectUrl.toString())) {
+        //     return { redirect: "/error?message=unregistered_redirect_uri" };
+        // }
+        
+        // Validate state
+        if (!state) {
+            if (request_uri) {
+                const errorUrl = new URL(redirect_uri);
+                errorUrl.searchParams.append('error', 'request_uri_not_supported');
+                return { redirect: errorUrl.toString() };
+            } else if (request) {
+                const errorUrl = new URL(redirect_uri);
+                errorUrl.searchParams.append('error', 'request_not_supported');
+                return { redirect: errorUrl.toString() };
+            } else {
+                const errorUrl = new URL(redirect_uri);
+                errorUrl.searchParams.append('error', 'invalid_request');
+                errorUrl.searchParams.append('error_description', 'Missing state');
+                return { redirect: errorUrl.toString() };
+            }
         }
-
-        if (!client.redirect_uris.includes(redirect_uri)) {
-            throw new Error('Invalid redirect URI');
+        
+        // Check prompt
+        if (prompt === 'none') {
+            const errorUrl = new URL(redirect_uri);
+            errorUrl.searchParams.append('state', state);
+            errorUrl.searchParams.append('error', 'interaction_required');
+            return { redirect: errorUrl.toString() };
         }
-
+        
+        // Validate response_type
+        if (!response_type) {
+            const errorUrl = new URL(redirect_uri);
+            errorUrl.searchParams.append('state', state);
+            errorUrl.searchParams.append('error', 'invalid_request');
+            errorUrl.searchParams.append('error_description', 'Missing response_type');
+            return { redirect: errorUrl.toString() };
+        }
+        
+        // Validate scope
+        const supportedScopes = ['openid', 'profile'];
+        const requestedScopes = scope.split(' ');
+        for (const requestedScope of requestedScopes) {
+            if (!supportedScopes.includes(requestedScope)) {
+                throw new Error(`Scope not supported: ${requestedScope}`);
+            }
+        }
+        
+        // Create session
         const sessionId = randomBytes(32).toString('hex');
-        const authCode = randomBytes(32).toString('hex');
-
+        const sessionSecret = randomBytes(16).toString('base64').replace(/[+/=]/g, '');
+        
         await db.setSession(sessionId, {
-            client_id,
-            redirect_uri,
-            scope,
-            state,
-            nonce
+            siweNonce,
+            oidcNonce: nonce,
+            secret: sessionSecret,
+            signinCount: 0
         });
+        
+        // Create session cookie
+        const sessionCookie = {
+            name: 'session',
+            value: sessionId,
+            sameSite: 'strict',
+            httpOnly: true,
+            maxAge: 3600 // SESSION_LIFETIME in seconds
+        };
+        
+        const domain = new URL(redirect_uri).hostname;
+        const oidcNonceParam = nonce ? `&oidc_nonce=${nonce}` : '';
 
-        await db.setAuthCode(authCode, {
-            client_id,
-            redirect_uri,
-            scope,
-            state,
-            nonce
-        });
-
+        console.log({redirect_uri})
+        
         return {
-            sessionId,
-            authCode
+            redirect: `/?nonce=${siweNonce}&domain=${domain}&redirect_uri=${redirect_uri}&state=${state}&action=${action}&client_id=${client_id}${oidcNonceParam}`,
+            cookie: sessionCookie,
+            sessionId: sessionId
         };
     }
 
     // UserInfo endpoint
     async handleUserInfoRequest(accessToken) {
-        const tokenData = await db.getToken(accessToken);
-        if (!tokenData) {
+        const tokenDataString = await db.getAuthCode(accessToken);
+        if (!tokenDataString) {
             throw new Error('Invalid access token');
         }
 
+        const tokenData = JSON.parse(tokenDataString);
+
+        // Resolve ENS name if available
+        const ensName = await this.resolveEnsName(tokenData.address);
+
+
+        console.log({ensName})
         // In a real implementation, you would fetch user data from your database
         return {
             sub: tokenData.sub,
-            // Add other claims as needed
+            preferred_username: ensName,
+            iss: config.baseUrl.toString(),
+            aud: [tokenData.clientId],
         };
     }
 
