@@ -6,9 +6,9 @@ dotenv.config();
 const config = {
     address: process.env.ADDRESS || '127.0.0.1',
     port: parseInt(process.env.PORT || '8000', 10),
-    baseUrl: new URL(process.env.BASE_URL || 'http://127.0.0.1:8000'),
+    baseUrl: new URL(process.env.SIWEOIDC_BASE_URL || 'http://127.0.0.1:8000'),
     rsaPem: process.env.RSA_PEM,
-    redisUrl: new URL(process.env.REDIS_URL || 'redis://localhost'),
+    redisUrl: new URL(process.env.SIWEOIDC_REDIS_URL || 'redis://localhost'),
     defaultClients: {},
     requireSecret: process.env.REQUIRE_SECRET === 'true',
     ethProvider: process.env.ETH_PROVIDER ? new URL(process.env.ETH_PROVIDER) : null,
