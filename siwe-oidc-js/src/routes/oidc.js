@@ -6,11 +6,18 @@ import { SiweMessage } from 'siwe';
 
 const router = express.Router();
 
+const customHeaders = (res, path, stat) => {
+    res.append("Cross-Origin-Opener-Policy", "same-origin-allow-popups"); 
+  }
+
 // Serve static files from the static directory
-router.use(express.static('static'));
+router.use(express.static('static', { setHeaders: customHeaders }));
 
 // Serve the main index.html file on the base route
 router.get('/', (req, res) => {
+    // Try a different approach since previous methods didn't work
+    // First send the header, then use a callback to send the file
+    // res.header('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
     res.sendFile('index.html', { root: 'static' });
 });
 
