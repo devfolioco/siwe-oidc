@@ -10,7 +10,15 @@ import oidcRouter from './routes/oidc.js';
 const app = express();
 
 // Middleware
-app.use(helmet());
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            connectSrc: ["'self'", "wss://relay.walletconnect.org", "https://relay.walletconnect.org"],
+        }
+    }
+}));
+
 app.use(cors({
     origin: true,
     credentials: true
@@ -40,7 +48,7 @@ const startServer = async () => {
     try {
         await db.connect();
         
-        app.listen(config.port,  () => {
+        app.listen(config.port, () => {
             console.log(`Server running at http://${config.address}:${config.port}`);
         });
     } catch (error) {
