@@ -1,0 +1,71 @@
+FROM node:20-alpine as builder
+
+WORKDIR /siwe-oidc
+
+# Reference https://github.com/mhart/alpine-node/issues/27#issuecomment-880663905
+RUN apk add --no-cache --virtual .build-deps alpine-sdk python3
+
+# Set build arguments
+ARG INFURA_ID
+ARG WALLET_CONNECT_ID
+
+# Set environment variables
+ENV INFURA_ID=${INFURA_ID}
+ENV WALLET_CONNECT_ID=${WALLET_CONNECT_ID}
+
+# Copy UI source and static files
+COPY --chown=node:node ./static /siwe-oidc/static
+COPY --chown=node:node ./js/ui /siwe-oidc/js/ui
+
+# Build UI
+WORKDIR /siwe-oidc/js/ui
+RUN yarn install
+RUN yarn build
+
+# Final stage
+FROM node:20-alpine
+
+WORKDIR /siwe-oidc
+
+# Install runtime dependencies and build tools
+RUN apk add --no-cache \
+    openssl \
+    python3 \
+    make \
+    g++ \
+    gcc
+
+# Copy application source
+COPY ./server ./server
+WORKDIR /siwe-oidc/server
+
+# Install application dependencies with node-gyp support
+RUN npm install
+
+# Build TypeScript
+RUN npm run build
+
+# Copy static files from builder
+COPY --from=builder /siwe-oidc/static/ ./static/
+
+# Generate RSA key if not provided
+RUN if [ -z "$RSA_PEM" ]; then \
+    openssl genrsa -out /tmp/private.pem 2048 && \
+    export RSA_PEM=$(cat /tmp/private.pem) && \
+    rm /tmp/private.pem; \
+    fi
+
+# Set environment variables
+ENV SIWEOIDC_ADDRESS="0.0.0.0"
+
+# Expose port
+EXPOSE 8000
+
+# Start the application
+CMD ["npm", "start"]
+
+# Labels
+LABEL org.opencontainers.image.source="https://github.com/spruceid/siwe-oidc"
+LABEL org.opencontainers.image.description="OpenID Connect Identity Provider for Sign-In with Ethereum"
+LABEL org.opencontainers.image.licenses="MIT OR Apache-2.0"
+LABEL org.opencontainers.image.version="1.0.0" 

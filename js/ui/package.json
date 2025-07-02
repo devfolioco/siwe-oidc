@@ -4,7 +4,7 @@
   "version": "1.3.0",
   "scripts": {
     "dev": "webpack serve --port 9080",
-    "build": "cross-env NODE_ENV=production webpack && mkdir -p ../../static && mv dist/* ../../static/",
+    "build": "cross-env NODE_ENV=production INFURA_ID=1234 WALLET_CONNECT_ID=aded953fd76c6ee04f0b785bc5cbe5ba webpack && mkdir -p ../../static && mv dist/* ../../static/",
     "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
   },
   "dependencies": {
