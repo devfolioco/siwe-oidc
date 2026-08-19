@@ -26,7 +26,7 @@ jobs:
           push: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          platforms: linux/amd64
+          platforms: linux/amd64,linux/arm64
           tags: |
             ghcr.io/devfolioco/siwe-oidc:${{ github.event.release.tag_name }}
             ghcr.io/devfolioco/siwe-oidc:latest
@@ -41,8 +41,7 @@ jobs:
           push: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          # @todo Add arm builds once they are faster
-          platforms: linux/amd64
+          platforms: linux/amd64,linux/arm64
           tags: |
             ghcr.io/devfolioco/siwe-oidc:${{ github.event.release.tag_name }}
           build-args: |
